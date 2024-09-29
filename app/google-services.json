@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "421730876260",
+    "project_id": "guardbox-42992",
+    "storage_bucket": "guardbox-42992.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:421730876260:android:b636b4c68d6d2c35489871",
+        "android_client_info": {
+          "package_name": "com.example.guardbox64"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3ERiX-ARDhZq4m0NulXAjRExyHQqral4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
