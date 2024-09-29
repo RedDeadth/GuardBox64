@@ -64,7 +64,7 @@ fun RegisterScreen(navController: NavHostController, viewModel: AuthViewModel = 
                 password,
                 onSuccess = {
                     // Navega a la pantalla de confirmación si el registro es exitoso
-                    navController.navigate("confirmation")
+                    navController.navigate("login")
                 },
                 onFailure = { error ->
                     // Actualiza el mensaje de error en caso de fallo
