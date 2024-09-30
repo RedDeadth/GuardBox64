@@ -13,39 +13,31 @@ import androidx.compose.runtime.setValue
 import com.example.guardbox64.model.Locker
 
 @Composable
-fun AddLockerDialog(
-    onAdd: (Locker) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var lockerName by remember { mutableStateOf("") }
-    var lockerId by remember { mutableStateOf("") }
-    var isOccupied by remember { mutableStateOf(false) }
+fun AddLockerDialog(onAdd: (Locker) -> Unit, onDismiss: () -> Unit) {
+    var name by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Añadir Casillero") },
+        title = { Text("Añadir Nuevo Casillero") },
         text = {
-            Column {
-                TextField(
-                    value = lockerId,
-                    onValueChange = { lockerId = it },
-                    label = { Text("ID del Casillero") }
-                )
-                TextField(
-                    value = lockerName,
-                    onValueChange = { lockerName = it },
-                    label = { Text("Nombre del Casillero") }
-                )
-                // Aquí puedes agregar más campos si es necesario
-                // Por ejemplo, para indicar si el casillero está ocupado
-                // TextField(...) para más información
-            }
+            TextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Nombre del Casillero") }
+            )
         },
         confirmButton = {
             Button(onClick = {
-                val newLocker = Locker(name = lockerName, isOccupied = isOccupied)
-                onAdd(newLocker)
-                onDismiss()
+                if (name.isNotBlank()) {
+                    val newLocker = Locker(
+                        name = name,
+                        isOccupied = false,
+                        isOpen = false,
+                        userId = "",
+                        reservationEndTime = null
+                    )
+                    onAdd(newLocker)
+                }
             }) {
                 Text("Añadir")
             }

@@ -12,7 +12,8 @@ class LockerViewModel : ViewModel() {
         private set
 
     init {
-        loadLockers() // Cargar los casilleros al inicializar el ViewModel
+        loadLockers()
+
     }
 
     private fun loadLockers() {
@@ -31,18 +32,16 @@ class LockerViewModel : ViewModel() {
     }
 
     fun addLocker(locker: Locker) {
-        // Verificar que locker.id no esté vacío antes de intentar añadirlo a Firebase
-        if (locker.id.isNotEmpty()) {
-            firestore.collection("lockers").document(locker.id).set(locker)
-                .addOnSuccessListener {
-                    loadLockers() // Recargar los casilleros después de añadir uno nuevo
-                    android.util.Log.d("Firestore", "Casillero añadido correctamente con ID: ${locker.id}")
-                }
-                .addOnFailureListener { e ->
-                    android.util.Log.e("Firestore", "Error al añadir casillero: ", e)
-                }
-        } else {
-            android.util.Log.e("Firestore", "La ID del casillero está vacía. No se puede añadir.")
-        }
+        val newLocker = locker.copy(id = firestore.collection("lockers").document().id)
+        firestore.collection("lockers").document(newLocker.id).set(newLocker)
+            .addOnSuccessListener {
+                val updatedList = lockers.value.toMutableList()
+                updatedList.add(newLocker)
+                lockers.value = updatedList
+                android.util.Log.d("Firestore", "Casillero añadido correctamente con ID: ${newLocker.id}")
+            }
+            .addOnFailureListener { e ->
+                android.util.Log.e("Firestore", "Error al añadir casillero: ", e)
+            }
     }
 }

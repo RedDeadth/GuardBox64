@@ -32,7 +32,6 @@ import androidx.compose.runtime.setValue
 
 import androidx.navigation.NavController
 
-
 @Composable
 fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewModel()) {
     var email by remember { mutableStateOf("") }

@@ -40,7 +40,6 @@ fun RegisterScreen(navController: NavHostController, viewModel: AuthViewModel = 
             onValueChange = { email = it },
             label = { Text("Correo electrónico") }
         )
-
         Spacer(modifier = Modifier.height(16.dp))
 
         TextField(
