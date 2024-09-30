@@ -1,45 +1,48 @@
 package com.example.guardbox64.ui.viewmodel
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.guardbox64.model.Locker
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.launch
-import androidx.lifecycle.viewModelScope
+import com.example.guardbox64.model.Locker
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.commons.logging.Log
 
 class LockerViewModel : ViewModel() {
-    private val db = FirebaseFirestore.getInstance()
-    private val _lockers = MutableStateFlow<List<Locker>>(emptyList())
-    val lockers: StateFlow<List<Locker>> get() = _lockers
+    private val firestore = FirebaseFirestore.getInstance()
+    var lockers = mutableStateOf<List<Locker>>(emptyList())
+        private set
 
     init {
-        fetchLockers()
+        loadLockers() // Cargar los casilleros al inicializar el ViewModel
     }
 
-    fun fetchLockers() {
-        viewModelScope.launch {
-            db.collection("lockers").get().addOnSuccessListener { result ->
-                val lockerList = result.map { it.toObject(Locker::class.java) }
-                _lockers.value = lockerList
+    private fun loadLockers() {
+        firestore.collection("lockers").get()
+            .addOnSuccessListener { documents ->
+                val lockerList = documents.mapNotNull { document ->
+                    document.toObject(Locker::class.java).copy(id = document.id)
+                }
+                lockers.value = lockerList // Actualizar la lista de casilleros
+                android.util.Log.d("Firestore", "Casilleros cargados correctamente.")
             }
-        }
+            .addOnFailureListener { e ->
+                android.util.Log.e("Firestore", "Error al cargar casilleros: ", e)
+                lockers.value = emptyList() // Retornar lista vacía en caso de error
+            }
     }
 
-    fun toggleLocker(locker: Locker) {
-        val updatedLocker = locker.copy(isOpen = !locker.isOpen)
-        db.collection("lockers").document(locker.id).set(updatedLocker)
-        fetchLockers()  // Recargar la lista
+    fun addLocker(locker: Locker) {
+        // Verificar que locker.id no esté vacío antes de intentar añadirlo a Firebase
+        if (locker.id.isNotEmpty()) {
+            firestore.collection("lockers").document(locker.id).set(locker)
+                .addOnSuccessListener {
+                    loadLockers() // Recargar los casilleros después de añadir uno nuevo
+                    android.util.Log.d("Firestore", "Casillero añadido correctamente con ID: ${locker.id}")
+                }
+                .addOnFailureListener { e ->
+                    android.util.Log.e("Firestore", "Error al añadir casillero: ", e)
+                }
+        } else {
+            android.util.Log.e("Firestore", "La ID del casillero está vacía. No se puede añadir.")
+        }
     }
 }

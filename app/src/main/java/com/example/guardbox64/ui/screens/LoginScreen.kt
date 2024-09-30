@@ -65,7 +65,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
                 viewModel.login(email, password, {
                     isLoading = false
                     // Navegar a la pantalla principal/home después de iniciar sesión
-                    navController.navigate("confirmation")
+                    navController.navigate("locker_list")
                 }, { error ->
                     isLoading = false
                     loginError = error
