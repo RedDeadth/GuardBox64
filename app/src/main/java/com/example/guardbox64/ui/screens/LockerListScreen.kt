@@ -29,9 +29,9 @@ fun LockerListScreen(
     val lockers by lockerViewModel.lockers // Observa los cambios en lockers
 
     // Filtrar los casilleros en tres categorías
-    val reservedLockers = lockers.filter { it.isOccupied && it.userId == FirebaseAuth.getInstance().currentUser?.uid }
-    val freeLockers = lockers.filter { !it.isOccupied }
-    val occupiedLockers = lockers.filter { it.isOccupied && it.userId != FirebaseAuth.getInstance().currentUser?.uid }
+    val reservedLockers = lockers.filter { it.occupied && it.userId == FirebaseAuth.getInstance().currentUser?.uid }
+    val freeLockers = lockers.filter { !it.occupied }
+    val occupiedLockers = lockers.filter { it.occupied && it.userId != FirebaseAuth.getInstance().currentUser?.uid }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Mostrar los casilleros reservados en un carrusel

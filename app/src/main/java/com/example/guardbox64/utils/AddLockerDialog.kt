@@ -31,8 +31,8 @@ fun AddLockerDialog(onAdd: (Locker) -> Unit, onDismiss: () -> Unit) {
                 if (name.isNotBlank()) {
                     val newLocker = Locker(
                         name = name,
-                        isOccupied = false,
-                        isOpen = false,
+                        occupied = false,
+                        open = false,
                         userId = "",
                         reservationEndTime = null
                     )

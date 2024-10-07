@@ -41,8 +41,8 @@ fun LockerItem(locker: Locker, onClick: () -> Unit) {
         Column {
             Text(text = locker.name, style = MaterialTheme.typography.bodyLarge)
             Text(
-                text = if (locker.isOccupied) "Ocupado" else "Libre",
-                color = if (locker.isOccupied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                text = if (locker.occupied) "Ocupado" else "Libre",
+                color = if (locker.occupied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
 
             // Mostrar la fecha de fin de reserva, si existe
