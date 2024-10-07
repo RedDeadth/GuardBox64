@@ -29,11 +29,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 
 import androidx.navigation.NavController
 
 @Composable
-fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewModel()) {
+fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = viewModel()) {
+    val context = LocalContext.current
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var loginError by remember { mutableStateOf<String?>(null) }
@@ -61,7 +64,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
         } else {
             Button(onClick = {
                 isLoading = true
-                viewModel.login(email, password, {
+                viewModel.login(email, password, context, {
                     isLoading = false
                     // Navegar a la pantalla principal/home después de iniciar sesión
                     navController.navigate("locker_list")

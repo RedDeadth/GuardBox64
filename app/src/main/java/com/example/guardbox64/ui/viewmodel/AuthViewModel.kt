@@ -14,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import android.content.Context
 
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -43,12 +44,14 @@ class AuthViewModel : ViewModel() {
     fun login(
         email: String,
         password: String,
+        context: Context,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
         viewModelScope.launch {
             try {
                 auth.signInWithEmailAndPassword(email, password).await()
+                saveSession(auth.currentUser?.uid ?: "", context)
                 onSuccess()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Error durante el inicio de sesión", e)
@@ -61,4 +64,23 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
+    fun loadSession(context: Context): String? {
+        val sharedPref = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+        return sharedPref.getString("user_id", null)
+    }
 }
+private fun saveUserSession(context: Context, isLoggedIn: Boolean) {
+    val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+    val editor = sharedPreferences.edit()
+    editor.putBoolean("is_logged_in", isLoggedIn)
+    editor.apply()
+}
+private fun saveSession(userId: String, context: Context) {
+    val sharedPref = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+    with(sharedPref.edit()) {
+        putString("user_id", userId)
+        apply()
+    }
+}
+
+
