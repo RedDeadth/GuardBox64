@@ -11,24 +11,36 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-
-
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.google.firebase.database.*
 
 class LockerViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("lockers")
 
-    var lockers = mutableStateOf<List<Locker>>(emptyList())
-        private set
+    private val _lockers = MutableLiveData<List<Locker>>(emptyList())
+    val lockers: LiveData<List<Locker>> = _lockers
 
     init {
         loadLockers()
     }
-    fun reserveLocker(lockerId: String, userId: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        val lockerRef = FirebaseDatabase.getInstance().getReference("lockers/$lockerId")
-        lockerRef.child("Occupied").setValue(true)
+
+    fun reserveLocker(
+        lockerId: String,
+        userId: String,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        val lockerRef = database.child(lockerId)
+        val updates = mapOf<String, Any>(
+            "occupied" to true,
+            "userId" to userId
+        )
+
+        // Actualiza los campos ocupados y userId en una sola llamada
+        lockerRef.updateChildren(updates)
             .addOnSuccessListener {
-                lockerRef.child("userId").setValue(userId)
-                onSuccess()
+                onSuccess() // Notificar éxito
             }
             .addOnFailureListener { e ->
                 onFailure("Error reservando el casillero: ${e.message}")
@@ -41,16 +53,17 @@ class LockerViewModel : ViewModel() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val lockerList = mutableListOf<Locker>()
                 for (lockerSnapshot in snapshot.children) {
-                    val locker = lockerSnapshot.getValue(Locker::class.java)?.copy(id = lockerSnapshot.key ?: "")
+                    val locker = lockerSnapshot.getValue(Locker::class.java)
+                        ?.copy(id = lockerSnapshot.key ?: "")
                     locker?.let { lockerList.add(it) }
                 }
-                lockers.value = lockerList // Actualizar la lista de casilleros
+                _lockers.value = lockerList // Actualizar el LiveData
                 android.util.Log.d("Firebase", "Casilleros cargados correctamente.")
             }
 
             override fun onCancelled(error: DatabaseError) {
                 android.util.Log.e("Firebase", "Error al cargar casilleros: ${error.message}")
-                lockers.value = emptyList() // Retornar lista vacía en caso de error
+                _lockers.value = emptyList() // Retornar lista vacía en caso de error
             }
         })
     }
@@ -58,12 +71,19 @@ class LockerViewModel : ViewModel() {
     fun addLocker(locker: Locker) {
         val newLockerRef = database.push() // Crea una nueva referencia en la base de datos
         val newLocker = locker.copy(id = newLockerRef.key ?: "") // Usa la clave generada
+
         newLockerRef.setValue(newLocker)
             .addOnSuccessListener {
-                val updatedList = lockers.value.toMutableList()
-                updatedList.add(newLocker)
-                lockers.value = updatedList
-                android.util.Log.d("RealtimeDatabase", "Casillero añadido correctamente con ID: ${newLocker.id}")
+                // Aquí es donde debes obtener la lista actual de lockers y agregar el nuevo casillero
+                val currentLockers = _lockers.value.orEmpty()
+                    .toMutableList() // Asegúrate de obtener la lista actual o una lista vacía
+                currentLockers.add(newLocker) // Agrega el nuevo casillero a la lista
+                _lockers.postValue(currentLockers) // Actualiza el LiveData con la lista actualizada
+
+                android.util.Log.d(
+                    "RealtimeDatabase",
+                    "Casillero añadido correctamente con ID: ${newLocker.id}"
+                )
             }
             .addOnFailureListener { e ->
                 android.util.Log.e("RealtimeDatabase", "Error al añadir casillero: ", e)

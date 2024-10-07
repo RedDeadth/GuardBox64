@@ -26,7 +26,6 @@ fun NavGraph(navController: NavHostController, startDestination: String) {
             LockerListScreen(
                 lockerViewModel = lockerViewModel,
                 navController = navController,
-                lockers = lockerViewModel.lockers.value,
                 onAddLockerClick = {
                     // Aquí puedes definir cómo recoger los datos del nuevo casillero,
                     // por ejemplo, usando un diálogo
