@@ -1,5 +1,7 @@
 package com.example.guardbox64.ui.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
@@ -10,13 +12,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.guardbox64.R
 import com.example.guardbox64.model.Locker
 import com.example.guardbox64.ui.viewmodel.LockerViewModel
 import com.example.guardbox64.utils.AddLockerDialog
-import com.example.guardbox64.utils.LockerItem
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -29,11 +33,12 @@ fun LockerListScreen(
 
     // Observa los cambios en lockers
     val lockers by lockerViewModel.lockers.observeAsState(emptyList())
+    val uniqueLockers = lockers.distinctBy { it.id }
 
     // Filtrar los casilleros en tres categorías
-    val reservedLockers = lockers.filter { it.occupied && it.userId == FirebaseAuth.getInstance().currentUser?.uid }
-    val freeLockers = lockers.filter { !it.occupied }
-    val occupiedLockers = lockers.filter { it.occupied && it.userId != FirebaseAuth.getInstance().currentUser?.uid }
+    val reservedLockers = uniqueLockers.filter { it.occupied && it.userId == FirebaseAuth.getInstance().currentUser?.uid }
+    val freeLockers = uniqueLockers.filter { !it.occupied }
+    val occupiedLockers = uniqueLockers.filter { it.occupied && it.userId != FirebaseAuth.getInstance().currentUser?.uid }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Mostrar los casilleros reservados en un carrusel
@@ -93,7 +98,7 @@ fun LockerListScreen(
             }
         }
 
-        if (lockers.isEmpty()) {
+        if (uniqueLockers.isEmpty()) {
             Text(
                 text = "No hay casilleros disponibles.",
                 style = MaterialTheme.typography.titleMedium,
@@ -118,6 +123,35 @@ fun LockerListScreen(
                 },
                 onDismiss = { showDialog = false }
             )
+        }
+    }
+}
+@Composable
+fun LockerItem(locker: Locker, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Imagen del casillero
+        Image(
+            painter = painterResource(id = R.drawable.lockericon), // Reemplaza con tu imagen
+            contentDescription = "Imagen del Casillero",
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // Nombre del casillero y su estado (Ocupado o Libre)
+        Column {
+            Text(text = locker.name, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = if (locker.occupied) "Ocupado" else "Libre",
+                color = if (locker.occupied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+            )
+
+
         }
     }
 }
