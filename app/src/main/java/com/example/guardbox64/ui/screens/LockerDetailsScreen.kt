@@ -242,9 +242,10 @@ fun LockerDetailsScreen(
         // Diálogo para tiempo personalizado (implementa la lógica según tus necesidades)
         if (showCustomTimeDialog) {
             CustomTimeDialog(
-                onTimeSelected = { customTime ->
-                    selectedTime = customTime * 3600000L  // Convertir a milisegundos
+                onTimeSelected = { customTimeInMillis -> // Recibe el tiempo total en milisegundos
+                    selectedTime = customTimeInMillis // Usa el tiempo total
                     showCustomTimeDialog = false // Cerrar el cuadro de diálogo
+
                     val currentTime = System.currentTimeMillis()
                     val reservationEndTime = currentTime + selectedTime!!
 
@@ -274,10 +275,11 @@ fun formatTime(timeInMillis: Long): String {
 }
 @Composable
 fun CustomTimeDialog(
-    onTimeSelected: (Int) -> Unit, // Se espera un tiempo en horas
+    onTimeSelected: (Long) -> Unit, // Se espera un tiempo en horas
     onCancel: () -> Unit
 ) {
-    var timeInput by remember { mutableStateOf("") } // Estado para el input de tiempo
+    var timeInput by remember { mutableStateOf("") }
+    var minutesInput by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = { onCancel() },
         title = { Text("Tiempo Personalizado") },
@@ -292,16 +294,25 @@ fun CustomTimeDialog(
                     ),
                     label = { Text("Horas") }
                 )
+                // Campo para minutos
+                TextField(
+                    value = minutesInput,
+                    onValueChange = { minutesInput = it },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    label = { Text("Minutos") }
+                )
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    // Verificar si el input no está vacío y es un número válido
-                    if (timeInput.isNotEmpty()) {
-                        val hours = timeInput.toIntOrNull() ?: 0
-                        onTimeSelected(hours) // Devolver el tiempo en horas
-                    }
+                    // Verificar si los inputs no están vacíos y son números válidos
+                    val hours = timeInput.toIntOrNull() ?: 0
+                    val minutes = minutesInput.toIntOrNull() ?: 0
+                    val totalTimeInMillis = (hours * 3600000L) + (minutes * 60000L) // Convertir a milisegundos
+                    onTimeSelected(totalTimeInMillis) // Devolver el tiempo total en milisegundos
                 }
             ) {
                 Text("Aceptar")
