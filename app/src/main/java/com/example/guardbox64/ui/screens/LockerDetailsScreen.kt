@@ -4,9 +4,12 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -29,7 +32,20 @@ import com.example.guardbox64.R
 import com.example.guardbox64.model.Locker
 import com.example.guardbox64.ui.viewmodel.LockerViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TextField
+import androidx.compose.ui.text.input.KeyboardType
+import java.text.SimpleDateFormat
+import java.util.Locale
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LockerDetailsScreen(
     navController: NavController,
@@ -37,9 +53,13 @@ fun LockerDetailsScreen(
     lockerViewModel: LockerViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val lockerList by lockerViewModel.lockers.observeAsState(emptyList()) // Observa cambios en LiveData
-    val locker = lockerList.find { it.id == lockerId } // Encuentra el casillero específico
-    val isLoading = locker == null // Cargando si no hay casillero encontrado
+    val lockerList by lockerViewModel.lockers.observeAsState(emptyList())
+    val locker = lockerList.find { it.id == lockerId }
+    var showTimeDialog by remember { mutableStateOf(false) }
+    var selectedTime by remember { mutableStateOf<Long?>(null) }
+    var showCustomTimeDialog by remember { mutableStateOf(false) }
+
+    val isLoading = locker == null
 
     Column(
         modifier = Modifier
@@ -50,72 +70,247 @@ fun LockerDetailsScreen(
     ) {
         Text(text = "Detalles del Casillero", style = MaterialTheme.typography.titleLarge)
 
-        // Mostrar un indicador de carga mientras se obtiene el casillero
         if (isLoading) {
-            Text("Cargando...") // Mensaje de carga
+            Text("Cargando...")
         } else if (locker == null) {
-            Text("Error al cargar los detalles del casillero.") // Mensaje de error
+            Text("Error al cargar los detalles del casillero.")
         } else {
-            // Imagen del casillero
             Image(
-                painter = painterResource(id = R.drawable.lockericon), // Placeholder de imagen
+                painter = painterResource(id = R.drawable.lockericon),
                 contentDescription = "Imagen del Casillero",
                 modifier = Modifier.size(128.dp)
             )
 
-            // Nombre del casillero
             Text(text = locker.name, style = MaterialTheme.typography.titleMedium)
-
-            // Estado del casillero (Ocupado o Libre)
             Text(
                 text = if (locker.occupied) "Estado: Ocupado" else "Estado: Libre",
                 color = if (locker.occupied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
 
-            // Mostrar tiempo de reserva si está ocupado
             locker.reservationEndTime?.let { endTime ->
                 Text(text = "Reservado hasta: ${formatTime(endTime)}")
             }
 
-            var isOpen by remember { mutableStateOf(locker.open) } // Estado local del Switch
+            //mostrar palanca solo cuando el usuario ah hecho la reserva
+            if (locker.occupied) {
+                var isOpen by remember { mutableStateOf(locker.open) }
 
-            // Agrega un Switch para controlar el estado de apertura del casillero
-            Switch(
-                checked = isOpen,
-                onCheckedChange = { checked ->
-                    isOpen = checked
-                    lockerViewModel.updateLockerOpenState(lockerId, checked) // Actualizar en Firebase
-                }
-            )
-            Text(
-                text = if (isOpen) "Casillero Abierto" else "Casillero Cerrado",
-                style = MaterialTheme.typography.bodyMedium
-            )
+                // Switch para abrir/cerrar el casillero
+                Switch(
+                    checked = isOpen,
+                    onCheckedChange = { checked ->
+                        isOpen = checked
+                        lockerViewModel.updateLockerOpenState(lockerId, checked)
+                    }
+                )
+                Text(
+                    text = if (isOpen) "Casillero Abierto" else "Casillero Cerrado",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
             // Botón para reservar solo si está libre
             if (!locker.occupied) {
                 Button(onClick = {
-                    lockerViewModel.reserveLocker(
-                        lockerId,
-                        FirebaseAuth.getInstance().currentUser?.uid ?: "",
-                        onSuccess = {
-                            Toast.makeText(context, "Casillero reservado exitosamente", Toast.LENGTH_SHORT).show()
-                            navController.navigate("locker_list") // Navegar a la lista de casilleros
-                        },
-                        onFailure = { error ->
-                            Toast.makeText(context, error, Toast.LENGTH_SHORT).show() // Mostrar error
-                        }
-                    )
+                    showTimeDialog = true  // Mostrar diálogo para seleccionar tiempo
                 }) {
                     Text("Reservar")
                 }
             }
         }
+
+        // Diálogo para seleccionar tiempo de reserva
+        // Diálogo para seleccionar tiempo de reserva
+        if (showTimeDialog) {
+            AlertDialog(
+                onDismissRequest = { showTimeDialog = false },
+                title = { Text("Selecciona el tiempo de reserva") },
+                text = {
+                    Column {
+                        // Botón para 1 hora
+                        Button(onClick = {
+                            val currentTime = System.currentTimeMillis()
+                            selectedTime = 1 * 3600000L  // 1 hora
+                            showTimeDialog = false  // Cerrar diálogo al seleccionar
+                            val reservationEndTime = currentTime + selectedTime!!  // Calcular el tiempo de fin de reserva
+
+                            lockerViewModel.reserveLocker(
+                                lockerId,
+                                FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                                reservationEndTime,
+                                onSuccess = {
+                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT).show()
+                                },
+                                onFailure = { error ->
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }) {
+                            Text("1 hora")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Botón para 2 horas
+                        Button(onClick = {
+                            val currentTime = System.currentTimeMillis()
+                            selectedTime = 2 * 3600000L  // 2 horas
+                            showTimeDialog = false
+                            val reservationEndTime = currentTime + selectedTime!!
+
+                            lockerViewModel.reserveLocker(
+                                lockerId,
+                                FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                                reservationEndTime,
+                                onSuccess = {
+                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT).show()
+                                },
+                                onFailure = { error ->
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }) {
+                            Text("2 horas")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Botón para 5 horas
+                        Button(onClick = {
+                            val currentTime = System.currentTimeMillis()
+                            selectedTime = 5 * 3600000L  // 5 horas
+                            showTimeDialog = false
+                            val reservationEndTime = currentTime + selectedTime!!
+
+                            lockerViewModel.reserveLocker(
+                                lockerId,
+                                FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                                reservationEndTime,
+                                onSuccess = {
+                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT).show()
+                                },
+                                onFailure = { error ->
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }) {
+                            Text("5 horas")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Botón para 12 horas
+                        Button(onClick = {
+                            val currentTime = System.currentTimeMillis()
+                            selectedTime = 12 * 3600000L  // 12 horas
+                            showTimeDialog = false
+                            val reservationEndTime = currentTime + selectedTime!!
+
+                            lockerViewModel.reserveLocker(
+                                lockerId,
+                                FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                                reservationEndTime,
+                                onSuccess = {
+                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT).show()
+                                },
+                                onFailure = { error ->
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }) {
+                            Text("12 horas")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Botón para tiempo personalizado
+                        Button(onClick = {
+                            showTimeDialog = false  // Cerrar el diálogo principal
+                            // Mostrar un cuadro de diálogo para ingresar tiempo personalizado
+                            showCustomTimeDialog = true
+                        }) {
+                            Text("Tiempo personalizado")
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        showTimeDialog = false  // Cerrar diálogo al cancelar
+                    }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
+
+        // Diálogo para tiempo personalizado (implementa la lógica según tus necesidades)
+        if (showCustomTimeDialog) {
+            CustomTimeDialog(
+                onTimeSelected = { customTime ->
+                    selectedTime = customTime * 3600000L  // Convertir a milisegundos
+                    showCustomTimeDialog = false // Cerrar el cuadro de diálogo
+                    val currentTime = System.currentTimeMillis()
+                    val reservationEndTime = currentTime + selectedTime!!
+
+                    lockerViewModel.reserveLocker(
+                        lockerId,
+                        FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                        reservationEndTime,
+                        onSuccess = {
+                            Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT).show()
+                        },
+                        onFailure = { error ->
+                            Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                },
+                onCancel = {
+                    showCustomTimeDialog = false // Cerrar el cuadro de diálogo
+                }
+            )
+        }
     }
 }
 
-// Función para formatear la hora de fin de reserva
 fun formatTime(timeInMillis: Long): String {
-    // Puedes usar SimpleDateFormat o cualquier otra forma para formatear el tiempo
-    return java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(timeInMillis)
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    return dateFormat.format(timeInMillis)
+}
+@Composable
+fun CustomTimeDialog(
+    onTimeSelected: (Int) -> Unit, // Se espera un tiempo en horas
+    onCancel: () -> Unit
+) {
+    var timeInput by remember { mutableStateOf("") } // Estado para el input de tiempo
+    AlertDialog(
+        onDismissRequest = { onCancel() },
+        title = { Text("Tiempo Personalizado") },
+        text = {
+            Column {
+                Text("Ingresa el tiempo en horas:")
+                TextField(
+                    value = timeInput,
+                    onValueChange = { timeInput = it },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    label = { Text("Horas") }
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    // Verificar si el input no está vacío y es un número válido
+                    if (timeInput.isNotEmpty()) {
+                        val hours = timeInput.toIntOrNull() ?: 0
+                        onTimeSelected(hours) // Devolver el tiempo en horas
+                    }
+                }
+            ) {
+                Text("Aceptar")
+            }
+        },
+        dismissButton = {
+            Button(onClick = { onCancel() }) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
