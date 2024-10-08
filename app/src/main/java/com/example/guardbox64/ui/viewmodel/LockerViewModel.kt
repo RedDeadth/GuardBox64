@@ -28,13 +28,15 @@ class LockerViewModel : ViewModel() {
     fun reserveLocker(
         lockerId: String,
         userId: String,
+        reservationEndTime: Long,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
         val lockerRef = database.child(lockerId)
         val updates = mapOf<String, Any>(
             "occupied" to true,
-            "userId" to userId
+            "userId" to userId,
+            "reservationEndTime" to reservationEndTime
         )
 
         // Actualiza los campos ocupados y userId en una sola llamada
@@ -97,6 +99,29 @@ class LockerViewModel : ViewModel() {
             }
             .addOnFailureListener { e ->
                 android.util.Log.e("Firebase", "Error al actualizar estado de apertura: ${e.message}")
+            }
+    }
+    fun reserveLockerWithTime(
+        lockerId: String,
+        userId: String,
+        durationInMillis: Long,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        val lockerRef = database.child(lockerId)
+        val endTime = System.currentTimeMillis() + durationInMillis // Calcula la hora de fin
+        val updates = mapOf<String, Any>(
+            "occupied" to true,
+            "userId" to userId,
+            "reservationEndTime" to endTime // Guarda el tiempo de fin de la reserva
+        )
+
+        lockerRef.updateChildren(updates)
+            .addOnSuccessListener {
+                onSuccess() // Notificar éxito
+            }
+            .addOnFailureListener { e ->
+                onFailure("Error reservando el casillero: ${e.message}")
             }
     }
 }

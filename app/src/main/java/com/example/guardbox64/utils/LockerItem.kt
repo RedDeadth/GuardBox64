@@ -18,7 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.guardbox64.R
 import com.example.guardbox64.model.Locker
-import com.example.guardbox64.ui.screens.formatTime
+
 
 @Composable
 fun LockerItem(locker: Locker, onClick: () -> Unit) {
@@ -45,10 +45,7 @@ fun LockerItem(locker: Locker, onClick: () -> Unit) {
                 color = if (locker.occupied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
 
-            // Mostrar la fecha de fin de reserva, si existe
-            locker.reservationEndTime?.let { endTime ->
-                Text(text = "Reservado hasta: ${formatTime(endTime)}")
-            }
+
         }
     }
 }
