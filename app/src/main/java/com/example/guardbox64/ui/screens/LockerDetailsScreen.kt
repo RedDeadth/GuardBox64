@@ -90,9 +90,8 @@ fun LockerDetailsScreen(
             locker.reservationEndTime?.let { endTime ->
                 Text(text = "Reservado hasta: ${formatTime(endTime)}")
             }
-
-            //mostrar palanca solo cuando el usuario ah hecho la reserva
-            if (locker.occupied) {
+            //logica del swicht del casillero
+            if (locker.occupied && locker.userId == FirebaseAuth.getInstance().currentUser?.uid) {
                 var isOpen by remember { mutableStateOf(locker.open) }
 
                 // Switch para abrir/cerrar el casillero
@@ -107,6 +106,9 @@ fun LockerDetailsScreen(
                     text = if (isOpen) "Casillero Abierto" else "Casillero Cerrado",
                     style = MaterialTheme.typography.bodyMedium
                 )
+            } else if (locker.occupied) {
+                // Mensaje informativo si el casillero está ocupado por otro usuario
+                Text(text = "No puedes gestionar la apertura de este casillero.", style = MaterialTheme.typography.bodyMedium)
             }
 
             // Botón para reservar solo si está libre
@@ -118,8 +120,6 @@ fun LockerDetailsScreen(
                 }
             }
         }
-
-        // Diálogo para seleccionar tiempo de reserva
         // Diálogo para seleccionar tiempo de reserva
         if (showTimeDialog) {
             AlertDialog(

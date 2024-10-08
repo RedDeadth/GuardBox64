@@ -49,15 +49,21 @@ class LockerViewModel : ViewModel() {
             }
     }
 
-    fun loadLockers() {
+    private fun loadLockers() {
         val lockersRef = FirebaseDatabase.getInstance().getReference("lockers")
         lockersRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val lockerList = mutableListOf<Locker>()
+                val lockerIds = mutableSetOf<String>()
+
                 for (lockerSnapshot in snapshot.children) {
                     val locker = lockerSnapshot.getValue(Locker::class.java)
                         ?.copy(id = lockerSnapshot.key ?: "")
-                    locker?.let { lockerList.add(it) }
+
+                    if (locker != null && locker.id !in lockerIds) {
+                        lockerList.add(locker)
+                        lockerIds.add(locker.id)
+                    }
                 }
                 _lockers.value = lockerList // Actualizar el LiveData
                 android.util.Log.d("Firebase", "Casilleros cargados correctamente.")
@@ -76,16 +82,10 @@ class LockerViewModel : ViewModel() {
 
         newLockerRef.setValue(newLocker)
             .addOnSuccessListener {
-                // Aquí es donde debes obtener la lista actual de lockers y agregar el nuevo casillero
-                val currentLockers = _lockers.value.orEmpty()
-                    .toMutableList() // Asegúrate de obtener la lista actual o una lista vacía
-                currentLockers.add(newLocker) // Agrega el nuevo casillero a la lista
-                _lockers.postValue(currentLockers) // Actualiza el LiveData con la lista actualizada
-
-                android.util.Log.d(
-                    "RealtimeDatabase",
-                    "Casillero añadido correctamente con ID: ${newLocker.id}"
-                )
+                val currentLockers = _lockers.value.orEmpty().toMutableList()
+                currentLockers.add(newLocker)
+                _lockers.postValue(currentLockers) // Actualiza el LiveData
+                android.util.Log.d("RealtimeDatabase", "Casillero añadido correctamente con ID: ${newLocker.id}")
             }
             .addOnFailureListener { e ->
                 android.util.Log.e("RealtimeDatabase", "Error al añadir casillero: ", e)
