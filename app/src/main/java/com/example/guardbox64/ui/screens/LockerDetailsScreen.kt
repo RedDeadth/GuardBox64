@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,18 +36,9 @@ fun LockerDetailsScreen(
     lockerViewModel: LockerViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    var locker by remember { mutableStateOf<Locker?>(null) } // Estado del casillero
-    var isLoading by remember { mutableStateOf(true) }
-
-    val userId = FirebaseAuth.getInstance().currentUser?.uid
-
-    LaunchedEffect(lockerId) {
-        lockerViewModel.loadLockers() // Cargar todos los casiller
-    }
-    lockerViewModel.lockers.value.find { it.id == lockerId }?.let {
-        locker = it
-        isLoading = false
-    }
+    val lockerList by lockerViewModel.lockers.observeAsState(emptyList()) // Observa cambios en LiveData
+    val locker = lockerList.find { it.id == lockerId } // Encuentra el casillero específico
+    val isLoading = locker == null // Cargando si no hay casillero encontrado
 
     Column(
         modifier = Modifier
@@ -71,25 +63,25 @@ fun LockerDetailsScreen(
             )
 
             // Nombre del casillero
-            Text(text = locker!!.name, style = MaterialTheme.typography.titleMedium)
+            Text(text = locker.name, style = MaterialTheme.typography.titleMedium)
 
             // Estado del casillero (Ocupado o Libre)
             Text(
-                text = if (locker!!.occupied) "Estado: Ocupado" else "Estado: Libre",
-                color = if (locker!!.occupied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                text = if (locker.occupied) "Estado: Ocupado" else "Estado: Libre",
+                color = if (locker.occupied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
 
             // Mostrar tiempo de reserva si está ocupado
-            locker!!.reservationEndTime?.let { endTime ->
+            locker.reservationEndTime?.let { endTime ->
                 Text(text = "Reservado hasta: ${formatTime(endTime)}")
             }
 
             // Botón para reservar solo si está libre
-            if (!locker!!.occupied) {
+            if (!locker.occupied) {
                 Button(onClick = {
                     lockerViewModel.reserveLocker(
                         lockerId,
-                        userId ?: "",
+                        FirebaseAuth.getInstance().currentUser?.uid ?: "",
                         onSuccess = {
                             Toast.makeText(context, "Casillero reservado exitosamente", Toast.LENGTH_SHORT).show()
                             navController.navigate("locker_list") // Navegar a la lista de casilleros

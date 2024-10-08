@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -22,11 +23,12 @@ import com.google.firebase.auth.FirebaseAuth
 fun LockerListScreen(
     lockerViewModel: LockerViewModel,
     navController: NavHostController,
-    lockers: List<Locker>,
     onAddLockerClick: () -> Unit,
 ) {
     var showDialog by remember { mutableStateOf(false) }
-    val lockers by lockerViewModel.lockers // Observa los cambios en lockers
+
+    // Observa los cambios en lockers
+    val lockers by lockerViewModel.lockers.observeAsState(emptyList())
 
     // Filtrar los casilleros en tres categorías
     val reservedLockers = lockers.filter { it.occupied && it.userId == FirebaseAuth.getInstance().currentUser?.uid }
