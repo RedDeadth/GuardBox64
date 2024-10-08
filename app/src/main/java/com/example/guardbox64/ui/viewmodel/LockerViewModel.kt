@@ -119,11 +119,14 @@ class LockerViewModel : ViewModel() {
     fun updateLockerOpenState(lockerId: String, isOpen: Boolean) {
         val lockerRef = database.child(lockerId)
         lockerRef.child("open").setValue(isOpen)
-            .addOnSuccessListener {
-                android.util.Log.d("Firebase", "Estado de apertura actualizado a: $isOpen")
-            }
-            .addOnFailureListener { e ->
-                android.util.Log.e("Firebase", "Error al actualizar estado de apertura: ${e.message}")
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    android.util.Log.d("Firebase", "Estado de apertura actualizado a: $isOpen")
+                    // Aquí podrías notificar a través de LiveData si es necesario
+                } else {
+                    android.util.Log.e("Firebase", "Error al actualizar estado de apertura: ${task.exception?.message}")
+                    // Maneja el error de forma adecuada, como notificar al usuario
+                }
             }
     }
     private fun startReservationTimer(lockerId: String, reservationEndTime: Long) {
@@ -153,6 +156,18 @@ class LockerViewModel : ViewModel() {
                 android.util.Log.e("Firebase", "Error al expirar reserva del casillero: ${e.message}")
             }
     }
+    fun endReservation(lockerId: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        val lockerRef = database.child(lockerId)
+        val updates = mapOf<String, Any>(
+            "occupied" to false,
+            "userId" to "",
+        )
+
+        lockerRef.updateChildren(updates)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onFailure(e.message ?: "Error desconocido") }
+    }
+
 }
 
 
