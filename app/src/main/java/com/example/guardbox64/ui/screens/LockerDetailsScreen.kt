@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,6 +76,21 @@ fun LockerDetailsScreen(
             locker.reservationEndTime?.let { endTime ->
                 Text(text = "Reservado hasta: ${formatTime(endTime)}")
             }
+
+            var isOpen by remember { mutableStateOf(locker.open) } // Estado local del Switch
+
+            // Agrega un Switch para controlar el estado de apertura del casillero
+            Switch(
+                checked = isOpen,
+                onCheckedChange = { checked ->
+                    isOpen = checked
+                    lockerViewModel.updateLockerOpenState(lockerId, checked) // Actualizar en Firebase
+                }
+            )
+            Text(
+                text = if (isOpen) "Casillero Abierto" else "Casillero Cerrado",
+                style = MaterialTheme.typography.bodyMedium
+            )
 
             // Botón para reservar solo si está libre
             if (!locker.occupied) {

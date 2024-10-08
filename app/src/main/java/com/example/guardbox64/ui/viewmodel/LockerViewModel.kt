@@ -89,4 +89,14 @@ class LockerViewModel : ViewModel() {
                 android.util.Log.e("RealtimeDatabase", "Error al añadir casillero: ", e)
             }
     }
+    fun updateLockerOpenState(lockerId: String, isOpen: Boolean) {
+        val lockerRef = database.child(lockerId)
+        lockerRef.child("open").setValue(isOpen)
+            .addOnSuccessListener {
+                android.util.Log.d("Firebase", "Estado de apertura actualizado a: $isOpen")
+            }
+            .addOnFailureListener { e ->
+                android.util.Log.e("Firebase", "Error al actualizar estado de apertura: ${e.message}")
+            }
+    }
 }
