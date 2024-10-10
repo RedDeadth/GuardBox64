@@ -65,6 +65,8 @@ dependencies {
 
     implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
 
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+
     implementation ("androidx.compose.material:material:1.5.4")
     implementation ("androidx.compose.ui:ui-tooling-preview:1.5.4")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
