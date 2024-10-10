@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,8 +40,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.TextField
 import androidx.compose.ui.text.input.KeyboardType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -58,6 +64,11 @@ fun LockerDetailsScreen(
     var showTimeDialog by remember { mutableStateOf(false) }
     var selectedTime by remember { mutableStateOf<Long?>(null) }
     var showCustomTimeDialog by remember { mutableStateOf(false) }
+
+    var showEndReservationDialog by remember { mutableStateOf(false) }
+    var isCountdownActive by remember { mutableStateOf(false) }
+    var countdownTime by remember { mutableStateOf(5) }
+    var countdownJob: Job? by remember { mutableStateOf(null) }
 
     val isLoading = locker == null
 
@@ -108,7 +119,10 @@ fun LockerDetailsScreen(
                 )
             } else if (locker.occupied) {
                 // Mensaje informativo si el casillero está ocupado por otro usuario
-                Text(text = "No puedes gestionar la apertura de este casillero.", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = "No puedes gestionar la apertura de este casillero.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             // Botón para reservar solo si está libre
@@ -119,7 +133,88 @@ fun LockerDetailsScreen(
                     Text("Reservar")
                 }
             }
+
+            if (locker != null) {
+                // Verifica si el casillero está ocupado y pertenece al usuario actual
+                if (locker.occupied
+                    && locker.userId == FirebaseAuth.getInstance().currentUser?.uid
+                    && locker.reservationEndTime != null
+                    && locker.reservationEndTime > System.currentTimeMillis()
+                ) {
+                    // Botón para finalizar la reserva
+                    Button(onClick = { showEndReservationDialog = true }) {
+                        Text("Finalizar Reserva")
+                    }
+
+                    // Diálogo de confirmación
+                    if (showEndReservationDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showEndReservationDialog = false },
+                            title = { Text("Has retirado tus pertenencias?") },
+                            text = { Text("Confirma que has retirado tus pertenencias para finalizar la reserva.") },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        showEndReservationDialog = false
+                                        isCountdownActive = true // Inicia la cuenta regresiva
+
+                                        // Iniciar la cuenta regresiva
+                                        countdownJob = CoroutineScope(Dispatchers.Main).launch {
+                                            while (countdownTime > 0) {
+                                                delay(1000L) // Espera 1 segundo
+                                                countdownTime -= 1
+                                            }
+                                            // Finalizar la reserva cuando la cuenta regresiva termine
+                                            lockerViewModel.endReservation(
+                                                lockerId,
+                                                onSuccess = {
+                                                    // Actualizar el estado del casillero a cerrado
+                                                    lockerViewModel.updateLockerOpenState(lockerId, isOpen = false) // Asegúrate de pasar 'isOpen' aquí
+                                                    Toast.makeText(context, "Reserva finalizada", Toast.LENGTH_SHORT).show()
+                                                },
+                                                onFailure = { error ->
+                                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                            isCountdownActive = false
+                                        }
+                                    }
+                                ) {
+                                    Text("Sí")
+                                }
+                            },
+                            dismissButton = {
+                                Button(onClick = { showEndReservationDialog = false }) {
+                                    Text("No")
+                                }
+                            }
+                        )
+                    }
+
+                    // Barra de cuenta regresiva y botón de cancelar
+                    if (isCountdownActive) {
+                        // Mostrar barra de progreso (de 5 segundos)
+                        LinearProgressIndicator(
+                            progress = (5 - countdownTime) / 5f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text("Finalizando en $countdownTime segundos...")
+
+                        // Botón para cancelar la finalización
+                        Button(onClick = {
+                            countdownJob?.cancel() // Cancelar la cuenta regresiva
+                            countdownJob = null // Limpiar la referencia del Job
+                            isCountdownActive = false
+                            countdownTime = 5 // Restablecer el tiempo
+                        }) {
+                            Text("Cancelar Finalización")
+                        }
+                    }
+                }
+            }
         }
+
+    }
         // Diálogo para seleccionar tiempo de reserva
         if (showTimeDialog) {
             AlertDialog(
@@ -132,17 +227,20 @@ fun LockerDetailsScreen(
                             val currentTime = System.currentTimeMillis()
                             selectedTime = 1 * 3600000L  // 1 hora
                             showTimeDialog = false  // Cerrar diálogo al seleccionar
-                            val reservationEndTime = currentTime + selectedTime!!  // Calcular el tiempo de fin de reserva
+                            val reservationEndTime =
+                                currentTime + selectedTime!!  // Calcular el tiempo de fin de reserva
 
                             lockerViewModel.reserveLocker(
                                 lockerId,
                                 FirebaseAuth.getInstance().currentUser?.uid ?: "",
                                 reservationEndTime,
                                 onSuccess = {
-                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT)
+                                        .show()
                                 },
                                 onFailure = { error ->
-                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             )
                         }) {
@@ -162,10 +260,12 @@ fun LockerDetailsScreen(
                                 FirebaseAuth.getInstance().currentUser?.uid ?: "",
                                 reservationEndTime,
                                 onSuccess = {
-                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT)
+                                        .show()
                                 },
                                 onFailure = { error ->
-                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             )
                         }) {
@@ -185,10 +285,12 @@ fun LockerDetailsScreen(
                                 FirebaseAuth.getInstance().currentUser?.uid ?: "",
                                 reservationEndTime,
                                 onSuccess = {
-                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT)
+                                        .show()
                                 },
                                 onFailure = { error ->
-                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             )
                         }) {
@@ -208,10 +310,12 @@ fun LockerDetailsScreen(
                                 FirebaseAuth.getInstance().currentUser?.uid ?: "",
                                 reservationEndTime,
                                 onSuccess = {
-                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Reserva exitosa", Toast.LENGTH_SHORT)
+                                        .show()
                                 },
                                 onFailure = { error ->
-                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             )
                         }) {
@@ -242,9 +346,10 @@ fun LockerDetailsScreen(
         // Diálogo para tiempo personalizado (implementa la lógica según tus necesidades)
         if (showCustomTimeDialog) {
             CustomTimeDialog(
-                onTimeSelected = { customTime ->
-                    selectedTime = customTime * 3600000L  // Convertir a milisegundos
+                onTimeSelected = { customTimeInMillis -> // Recibe el tiempo total en milisegundos
+                    selectedTime = customTimeInMillis // Usa el tiempo total
                     showCustomTimeDialog = false // Cerrar el cuadro de diálogo
+
                     val currentTime = System.currentTimeMillis()
                     val reservationEndTime = currentTime + selectedTime!!
 
@@ -265,8 +370,10 @@ fun LockerDetailsScreen(
                 }
             )
         }
+
+
     }
-}
+
 
 fun formatTime(timeInMillis: Long): String {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
@@ -274,10 +381,11 @@ fun formatTime(timeInMillis: Long): String {
 }
 @Composable
 fun CustomTimeDialog(
-    onTimeSelected: (Int) -> Unit, // Se espera un tiempo en horas
+    onTimeSelected: (Long) -> Unit, // Se espera un tiempo en horas
     onCancel: () -> Unit
 ) {
-    var timeInput by remember { mutableStateOf("") } // Estado para el input de tiempo
+    var timeInput by remember { mutableStateOf("") }
+    var minutesInput by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = { onCancel() },
         title = { Text("Tiempo Personalizado") },
@@ -292,16 +400,25 @@ fun CustomTimeDialog(
                     ),
                     label = { Text("Horas") }
                 )
+                // Campo para minutos
+                TextField(
+                    value = minutesInput,
+                    onValueChange = { minutesInput = it },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    label = { Text("Minutos") }
+                )
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    // Verificar si el input no está vacío y es un número válido
-                    if (timeInput.isNotEmpty()) {
-                        val hours = timeInput.toIntOrNull() ?: 0
-                        onTimeSelected(hours) // Devolver el tiempo en horas
-                    }
+                    // Verificar si los inputs no están vacíos y son números válidos
+                    val hours = timeInput.toIntOrNull() ?: 0
+                    val minutes = minutesInput.toIntOrNull() ?: 0
+                    val totalTimeInMillis = (hours * 3600000L) + (minutes * 60000L) // Convertir a milisegundos
+                    onTimeSelected(totalTimeInMillis) // Devolver el tiempo total en milisegundos
                 }
             ) {
                 Text("Aceptar")

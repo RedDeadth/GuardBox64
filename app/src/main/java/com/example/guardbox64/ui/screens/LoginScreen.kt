@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.navigation.NavController
+import com.example.guardbox64.MainActivity
 
 @Composable
 fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = viewModel()) {
@@ -76,11 +77,19 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = vie
                 Text("Iniciar Sesión")
             }
         }
-
         // Mostrar error en caso de fallar el inicio de sesión
         loginError?.let { error ->
             Text(text = error, color = MaterialTheme.colorScheme.error)
         }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            // Llama a la función de inicio de sesión con Google
+            (context as MainActivity).signInWithGoogle()
+        }) {
+            Text("Iniciar Sesión con Google")
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         // Enlace a la pantalla de registro
