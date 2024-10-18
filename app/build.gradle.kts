@@ -53,23 +53,21 @@ android {
 }
 
 dependencies {
+    //FIREBASE
     implementation(platform("com.google.firebase:firebase-bom:32.7.3"))
-
     implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
-
-    implementation ("androidx.compose.ui:ui:1.5.4")
+    //COMPOSE MATERIAL3 Y CORUTINAS
+    implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.material3:material3:1.1.2")
-
-    implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
-
-    implementation ("com.google.android.gms:play-services-auth:20.7.0")
-
-    implementation ("androidx.compose.material:material:1.5.4")
-    implementation ("androidx.compose.ui:ui-tooling-preview:1.5.4")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
+    implementation("androidx.compose.material:material:1.5.4")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    //Oauth
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation (libs.kotlinx.coroutines.play.services)
 
     implementation(libs.androidx.core.ktx)

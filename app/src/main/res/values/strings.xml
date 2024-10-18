@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">GuardBox64</string>
     <string name="default_web_client_id">421730876260-pblr5im8v6p3el5l6ro4ihtb2e0und7g.apps.googleusercontent.com</string>
+    <string name="paypal_client_id">AVfjshhACztB545hEqP36JvWAx237o1zEjLI7zFDXvISH93fhcwC3MVvcOWFS3YP27d1YyL-JvaF2v1W</string>
+    <string name="paypal_secret_key">EC4Qy5Hn5QQ2YlSvwXXzfAgbfro6ru9Tt6BnQZ3OdWHNRC6Oattz__NkfPwD3WKkg4Q2xa4IUmj9RszE</string>
 </resources>
