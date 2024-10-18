@@ -24,6 +24,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -34,6 +35,7 @@ import com.google.android.gms.common.api.ApiException
 class MainActivity : ComponentActivity() {
     private lateinit var authViewModel: AuthViewModel
     private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var navController: NavHostController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +54,7 @@ class MainActivity : ComponentActivity() {
         val userId = authViewModel.loadSession(this) // Cargar la sesión
         val startDestination = if (userId != null) "locker_list" else "login"
         setContent {
-            val navController = rememberNavController() // Crear el controlador de navegación
+            navController = rememberNavController() // Crear el controlador de navegación
             NavGraph(navController = navController, startDestination = startDestination)
         }
     }
@@ -72,10 +74,11 @@ class MainActivity : ComponentActivity() {
                 val account = task.getResult(ApiException::class.java)
                 val idToken = account?.idToken
                 if (idToken != null) {
-                    authViewModel.signInWithGoogle(idToken, this, {
-                        // Autenticación exitosa
-                        // Navegar a la pantalla principal
-                        // Actualizar la interfaz
+                    authViewModel.signInWithGoogle(idToken, this, navController,{
+                        // Autenticación exitosa, navega a la pantalla "locker_list"
+                        navController.navigate("locker_list") {
+                            popUpTo("login") { inclusive = true }
+                        }
                     }, { errorMessage ->
                         // Mostrar el error
                         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()

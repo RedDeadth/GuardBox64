@@ -17,6 +17,7 @@ import kotlinx.coroutines.tasks.await
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 
@@ -76,13 +77,16 @@ class AuthViewModel : ViewModel() {
         val sharedPref = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         return sharedPref.getString("user_id", null)
     }
-    fun signInWithGoogle(idToken: String, context: Context, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+    fun signInWithGoogle(idToken: String, context: Context, navController: NavController, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         viewModelScope.launch {
             try {
                 auth.signInWithCredential(credential).await()
                 saveSession(auth.currentUser?.uid ?: "", context)
                 onSuccess()
+                navController.navigate("locker_list") {
+                    popUpTo("login") { inclusive = true }
+                }
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Error durante el inicio de sesión con Google", e)
                 onFailure("Error: ${e.message}")
