@@ -58,6 +58,7 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 auth.signInWithEmailAndPassword(email, password).await()
+                _authState.value = auth.currentUser
                 saveSession(auth.currentUser?.uid ?: "", context)
                 onSuccess()
             } catch (e: Exception) {
