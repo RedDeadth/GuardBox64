@@ -93,4 +93,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation ("androidx.compose.ui:ui-text:1.5.0") // Dependencia para estilos de texto
+    implementation ("androidx.compose.ui:ui:1.5.0") // Dependencia para estilos de texto
+
 }

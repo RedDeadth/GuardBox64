@@ -19,7 +19,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.guardbox64.ui.viewmodel.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.guardbox64.navigator.NavGraph
-import androidx.activity.compose.setContent
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,6 +30,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.example.guardbox64.ui.theme.AppTheme // Asegúrate de importar tu tema aquí
 
 class MainActivity : ComponentActivity() {
     private lateinit var authViewModel: AuthViewModel
@@ -44,6 +44,7 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
         authViewModel = ViewModelProvider(this).get(AuthViewModel::class.java)
 
+        // Configuración de Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id)) // Debes usar tu client_id de OAuth 2.0
             .requestEmail()
@@ -53,11 +54,16 @@ class MainActivity : ComponentActivity() {
 
         val userId = authViewModel.loadSession(this) // Cargar la sesión
         val startDestination = if (userId != null) "locker_list" else "login"
+
+        // Aplicar el tema globalmente
         setContent {
-            navController = rememberNavController() // Crear el controlador de navegación
-            NavGraph(navController = navController, startDestination = startDestination)
+            AppTheme { // Envolver todo el contenido dentro del tema
+                navController = rememberNavController() // Crear el controlador de navegación
+                NavGraph(navController = navController, startDestination = startDestination)
+            }
         }
     }
+
     fun signInWithGoogle() {
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
@@ -74,7 +80,7 @@ class MainActivity : ComponentActivity() {
                 val account = task.getResult(ApiException::class.java)
                 val idToken = account?.idToken
                 if (idToken != null) {
-                    authViewModel.signInWithGoogle(idToken, this, navController,{
+                    authViewModel.signInWithGoogle(idToken, this, navController, {
                         // Autenticación exitosa, navega a la pantalla "locker_list"
                         navController.navigate("locker_list") {
                             popUpTo("login") { inclusive = true }
@@ -94,5 +100,4 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val RC_SIGN_IN = 9001
     }
-
 }
