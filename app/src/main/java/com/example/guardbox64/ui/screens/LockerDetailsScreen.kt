@@ -92,7 +92,7 @@ fun LockerDetailsScreen(
                 modifier = Modifier.size(128.dp)
             )
 
-            Text(text = locker.name, style = MaterialTheme.typography.titleMedium)
+            Text(text = "Codigo de casillero: ${locker.id}", style = MaterialTheme.typography.bodySmall)
             Text(
                 text = if (locker.occupied) "Estado: Ocupado" else "Estado: Libre",
                 color = if (locker.occupied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
@@ -132,6 +132,7 @@ fun LockerDetailsScreen(
                 }) {
                     Text("Reservar")
                 }
+
             }
 
             if (locker != null) {

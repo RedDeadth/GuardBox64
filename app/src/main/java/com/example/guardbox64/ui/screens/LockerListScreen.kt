@@ -20,16 +20,16 @@ import androidx.navigation.NavHostController
 import com.example.guardbox64.R
 import com.example.guardbox64.model.Locker
 import com.example.guardbox64.ui.viewmodel.LockerViewModel
-import com.example.guardbox64.utils.AddLockerDialog
+
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LockerListScreen(
     lockerViewModel: LockerViewModel,
     navController: NavHostController,
-    onAddLockerClick: () -> Unit,
+
 ) {
-    var showDialog by remember { mutableStateOf(false) }
+
 
     // Observa los cambios en lockers
     val lockers by lockerViewModel.lockers.observeAsState(emptyList())
@@ -106,24 +106,8 @@ fun LockerListScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp)) // Espacio entre los elementos y el botón
-        Button(
-            onClick = { showDialog = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Añadir Casillero")
-        }
 
-        // Mostrar diálogo para agregar casillero
-        if (showDialog) {
-            AddLockerDialog(
-                onAdd = { newLocker ->
-                    lockerViewModel.addLocker(newLocker) // Lógica para agregar un nuevo casillero
-                    showDialog = false
-                },
-                onDismiss = { showDialog = false }
-            )
-        }
+
     }
 }
 @Composable
@@ -145,7 +129,7 @@ fun LockerItem(locker: Locker, onClick: () -> Unit) {
 
         // Nombre del casillero y su estado (Ocupado o Libre)
         Column {
-            Text(text = locker.name, style = MaterialTheme.typography.bodyLarge)
+            Text(text = "Codigo: ${locker.id}", style = MaterialTheme.typography.bodyMedium)
             Text(
                 text = if (locker.occupied) "Ocupado" else "Libre",
                 color = if (locker.occupied) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary

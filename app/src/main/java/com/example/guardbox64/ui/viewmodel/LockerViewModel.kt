@@ -17,6 +17,8 @@ import androidx.lifecycle.MutableLiveData
 import com.google.firebase.database.*
 import android.os.Handler
 import androidx.compose.runtime.remember
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue
 
 class LockerViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("lockers")
@@ -167,6 +169,7 @@ class LockerViewModel : ViewModel() {
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { e -> onFailure(e.message ?: "Error desconocido") }
     }
+
 
 }
 

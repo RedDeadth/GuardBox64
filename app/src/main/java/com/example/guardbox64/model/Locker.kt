@@ -6,5 +6,6 @@ data class Locker(
     val occupied: Boolean = false,
     val open: Boolean = false,
     val userId: String = "",
-    val reservationEndTime: Long? = null
+    val reservationEndTime: Long? = null,
+    val sharedWith: List<String> = emptyList()
 )
