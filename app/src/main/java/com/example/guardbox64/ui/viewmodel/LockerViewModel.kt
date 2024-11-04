@@ -103,21 +103,7 @@ class LockerViewModel : ViewModel() {
         })
     }
 
-    fun addLocker(locker: Locker) {
-        val newLockerRef = database.push() // Crea una nueva referencia en la base de datos
-        val newLocker = locker.copy(id = newLockerRef.key ?: "") // Usa la clave generada
 
-        newLockerRef.setValue(newLocker)
-            .addOnSuccessListener {
-                val currentLockers = _lockers.value.orEmpty().toMutableList()
-                currentLockers.add(newLocker)
-                _lockers.postValue(currentLockers) // Actualiza el LiveData
-                android.util.Log.d("RealtimeDatabase", "Casillero añadido correctamente con ID: ${newLocker.id}")
-            }
-            .addOnFailureListener { e ->
-                android.util.Log.e("RealtimeDatabase", "Error al añadir casillero: ", e)
-            }
-    }
     fun updateLockerOpenState(lockerId: String, isOpen: Boolean) {
         val lockerRef = database.child(lockerId)
         lockerRef.child("open").setValue(isOpen)
@@ -169,6 +155,27 @@ class LockerViewModel : ViewModel() {
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { e -> onFailure(e.message ?: "Error desconocido") }
     }
+
+    fun addUserToLocker(lockerId: String, userId: String) {
+        val lockerRef = FirebaseDatabase.getInstance().getReference("lockers/$lockerId")
+
+        lockerRef.child("sharedWith").get().addOnSuccessListener { snapshot ->
+            val currentSharedWith = snapshot.getValue(object : GenericTypeIndicator<List<String>>() {}) ?: emptyList()
+            if (!currentSharedWith.contains(userId)) {
+                val updatedSharedWith = currentSharedWith + userId
+                lockerRef.child("sharedWith").setValue(updatedSharedWith)
+                    .addOnSuccessListener {
+                        // Opcional: Manejar el éxito, como mostrar un mensaje
+                    }
+                    .addOnFailureListener { error ->
+                        // Opcional: Manejar el error, como mostrar un mensaje
+                    }
+            } else {
+                // El usuario ya está compartido, manejar esto si es necesario
+            }
+        }
+    }
+
 
 
 }

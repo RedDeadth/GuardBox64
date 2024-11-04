@@ -50,7 +50,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LockerDetailsScreen(
@@ -61,14 +60,19 @@ fun LockerDetailsScreen(
     val context = LocalContext.current
     val lockerList by lockerViewModel.lockers.observeAsState(emptyList())
     val locker = lockerList.find { it.id == lockerId }
+    //TIMEPO PERZONALIDO DE RESERVA
     var showTimeDialog by remember { mutableStateOf(false) }
     var selectedTime by remember { mutableStateOf<Long?>(null) }
     var showCustomTimeDialog by remember { mutableStateOf(false) }
-
+    //FINALIZAR RESERVA
     var showEndReservationDialog by remember { mutableStateOf(false) }
     var isCountdownActive by remember { mutableStateOf(false) }
     var countdownTime by remember { mutableStateOf(5) }
     var countdownJob: Job? by remember { mutableStateOf(null) }
+    //COMPARITR CON OTRO USUARIOS
+    var userIdToAdd by remember { mutableStateOf("") }
+    var showAddUserDialog by remember { mutableStateOf(false) }
+
 
     val isLoading = locker == null
 
@@ -117,6 +121,42 @@ fun LockerDetailsScreen(
                     text = if (isOpen) "Casillero Abierto" else "Casillero Cerrado",
                     style = MaterialTheme.typography.bodyMedium
                 )
+                Button(onClick = { showAddUserDialog = true }) {
+                    Text("Agregar Usuario")
+                }
+
+                if (showAddUserDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showAddUserDialog = false },
+                        title = { Text("Agregar Usuario por ID") },
+                        text = {
+                            Column {
+                                TextField(
+                                    value = userIdToAdd,
+                                    onValueChange = { userIdToAdd = it },
+                                    label = { Text("ID del Usuario") }
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            Button(onClick = {
+                                lockerViewModel.addUserToLocker(lockerId, userIdToAdd)
+                                userIdToAdd = "" // Limpiar el campo
+                                showAddUserDialog = false // Cerrar el diálogo
+                            }) {
+                                Text("Agregar")
+                            }
+                        },
+                        dismissButton = {
+                            Button(onClick = { showAddUserDialog = false }) {
+                                Text("Cancelar")
+                            }
+                        }
+                    )
+                }
+
+
+
             } else if (locker.occupied) {
                 // Mensaje informativo si el casillero está ocupado por otro usuario
                 Text(
@@ -432,3 +472,4 @@ fun CustomTimeDialog(
         }
     )
 }
+
