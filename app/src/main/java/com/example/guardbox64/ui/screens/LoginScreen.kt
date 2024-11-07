@@ -1,5 +1,6 @@
 package com.example.guardbox64.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,26 +40,29 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = vie
     var loginError by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
-
-    Box(
-        modifier = Modifier
-            .size(80.dp)
-            .background(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), shape = CircleShape) // Fondo blanco
-            .padding(8.dp) // Espaciado interno
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.lockericon),
-            contentDescription = "Imagen del Casillero",
-            modifier = Modifier.fillMaxSize().clip(CircleShape) // Recorte en círculo
-        )
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top // Asegura que el contenido esté en la parte superior
     ) {
+    Box(
+        modifier = Modifier
+            .size(240.dp)
+            .background(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), shape = CircleShape) // Fondo blanco
+            .padding(9.dp) // Espaciado interno
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Imagen del Casillero",
+            modifier = Modifier.fillMaxSize().clip(CircleShape) // Recorte en círculo
+                .fillMaxSize()
+                .clip(CircleShape) // Recorte en círculo
+                .align(Alignment.Center) // Centrar la imagen en el Box
+        )
+    }
+
         TextField(
             value = email,
             onValueChange = { email = it },
@@ -115,14 +119,15 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = vie
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                    containerColor = Color.Yellow,  // Fondo amarillo
+                    contentColor = Color.Black      // Texto negro
+                ),
+                border = BorderStroke(2.dp, Color.Black) // Contorno de 2dp y color negro
             ) {
                 Text(
                     text = "Iniciar Sesión",
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = Color.Black  // Aseguramos que el texto sea negro para contraste
                 )
             }
         }
@@ -140,9 +145,10 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = vie
             onClick = { (context as MainActivity).signInWithGoogle() },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary,
+                containerColor = Color.White,  // Fondo amarillo
                 contentColor = MaterialTheme.colorScheme.onSecondary
-            )
+            ),
+            border = BorderStroke(2.dp, Color.Black) // Contorno de 2dp y color negro
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Imagen del icono de Google
@@ -154,7 +160,9 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = vie
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Iniciar Sesión con Google",
-                    style = MaterialTheme.typography.labelLarge
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.Black  // Aseguramos que el texto sea negro para contraste
+
                 )
             }
         }

@@ -1,5 +1,6 @@
 package com.example.guardbox64.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
@@ -89,12 +91,21 @@ fun RegisterScreen(navController: NavHostController, viewModel: AuthViewModel = 
                     password,
                     onSuccess = { navController.navigate("login") },
                     onFailure = { error -> errorMessage = error }
+
                 )
             },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Yellow,  // Fondo amarillo
+                contentColor = Color.Black      // Texto negro
+            ),
+            border = BorderStroke(2.dp, Color.Black) // Contorno de 2dp y color negro
         ) {
-            Text("Registrar", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = "Registrar",
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.Black  // Aseguramos que el texto sea negro para contraste
+            )
         }
     }
 }

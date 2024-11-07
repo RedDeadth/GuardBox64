@@ -1,5 +1,6 @@
 package com.example.guardbox64.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import com.example.guardbox64.utils.AddLockerDialog
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun LockerListScreen(
@@ -112,7 +114,11 @@ fun LockerListScreen(
         Button(
             onClick = { showDialog = true },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Yellow,  // Fondo amarillo
+                contentColor = Color.Black      // Texto negro
+            ),
+            border = BorderStroke(2.dp, Color.Black) // Contorno de 2dp y color negro
         ) {
             Text("Añadir Casillero", style = MaterialTheme.typography.bodyLarge)
         }
@@ -146,7 +152,7 @@ fun LockerItem(locker: Locker, onClick: () -> Unit) {
                 .padding(8.dp) // Espaciado interno
         ) {
             Image(
-                painter = painterResource(id = R.drawable.lockericon),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Imagen del Casillero",
                 modifier = Modifier.fillMaxSize().clip(CircleShape) // Recorte en círculo
             )
