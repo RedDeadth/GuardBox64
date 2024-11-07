@@ -209,7 +209,7 @@ fun LockerDetailsScreen(
                         .padding(16.dp) // Margen alrededor del botón
                         .fillMaxWidth(), // Ocupa el ancho completo
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF6200EE),  // Color de fondo del botón
+                        containerColor = Color(0xFFD6C215),  // Color de fondo del botón
                         contentColor = Color.White           // Color del texto dentro del botón
                     ),
                     shape = RoundedCornerShape(8.dp),       // Bordes redondeados
